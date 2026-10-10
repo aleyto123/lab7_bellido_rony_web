@@ -1,15 +1,15 @@
-import authService from '../services/AuthService.js';
+﻿import authService from '../services/AuthService.js';
 
 class AuthController {
   async signUp(req, res, next) {
     try {
-      const { email, password, name, roles } = req.body;
+      const { email, password, name } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ message: 'El email y password son requeridos' });
       }
 
-      const user = await authService.signUp({ email, password, name, roles });
+      const user = await authService.signUp({ email, password, name });
       return res.status(201).json(user);
     } catch (error) {
       return next(error);
@@ -33,3 +33,4 @@ class AuthController {
 }
 
 export default new AuthController();
+

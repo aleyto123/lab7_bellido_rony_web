@@ -1,10 +1,11 @@
-import bcrypt from 'bcrypt';
+﻿import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import roleRepository from '../repositories/RoleRepository.js';
 import userRepository from '../repositories/UserRepository.js';
 
 class AuthService {
-  async signUp({ email, password, name, roles = ['user'] }) {
+  async signUp({ email, password, name }) {
+    const roles = ['user'];
     const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await userRepository.findByEmail(normalizedEmail);
 
@@ -43,7 +44,7 @@ class AuthService {
     const validPassword = user && await bcrypt.compare(password, user.password);
 
     if (!user || !validPassword) {
-      const error = new Error('Credenciales inválidas');
+      const error = new Error('Credenciales invÃ¡lidas');
       error.status = 401;
       throw error;
     }
@@ -62,3 +63,4 @@ class AuthService {
 }
 
 export default new AuthService();
+

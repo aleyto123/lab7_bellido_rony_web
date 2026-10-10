@@ -1,0 +1,47 @@
+﻿name: CI y despliegue en Render
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Verificar sintaxis
+        run: find src -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Probar autenticacion y roles
+        run: npm test
+      - name: Comprobar modulos
+        run: node --input-type=module -e "await import('./src/routes/auth.routes.js'); await import('./src/routes/users.routes.js')"
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Solicitar despliegue en Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo 'Falta configurar el secret RENDER_DEPLOY_HOOK_URL en GitHub.'
+            exit 1
+          fi
+          curl --fail --silent --show-error --output /dev/null --request POST "$RENDER_DEPLOY_HOOK_URL&ref=${GITHUB_SHA}"
+
+
